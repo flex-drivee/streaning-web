@@ -1,0 +1,26 @@
+# Node dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Editor & system files
+.vscode/
+.idea/
+*.log
+*.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Lock files (optional, keep only one)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
