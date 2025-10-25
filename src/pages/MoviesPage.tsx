@@ -44,8 +44,6 @@ const MoviesPage: React.FC = () => {
           videos={category.videos}
           onPlay={handlePlay}
           onInfo={(v) => setActiveVideo(v)}
-          activeId={activeId}
-          setActiveId={setActiveId}
           onExpand={(v) => setActiveVideo(v)}
         />
       ))}

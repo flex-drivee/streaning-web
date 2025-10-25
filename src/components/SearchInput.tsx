@@ -244,8 +244,7 @@ const SearchInput: React.FC<SearchInputProps> = ({ onPlay, headerOffset = 64 }) 
                             onInfo={(v) => setActiveVideo(v)}
                             onAdd={(v) => toggleWatchLater(v)}
                             onExpand={(v) => setActiveVideo(v)}
-                            isActive={activeId != null && String(activeId) === String(video.id)}
-                            onRequestActivate={(id) => setActiveId(id)}
+
                           />
                         </div>
                       ))}
@@ -270,8 +269,6 @@ const SearchInput: React.FC<SearchInputProps> = ({ onPlay, headerOffset = 64 }) 
                             onInfo={(v) => setActiveVideo(v)}
                             onAdd={(v) => toggleWatchLater(v)}
                             onExpand={(v) => setActiveVideo(v)}
-                            isActive={activeId != null && String(activeId) === String(video.id)}
-                            onRequestActivate={(id) => setActiveId(id)}
                           />
                         </div>
                       ))}

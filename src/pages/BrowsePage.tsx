@@ -12,7 +12,6 @@ interface OutletContext {
 
 const BrowsePage: React.FC = () => {
   const { setActiveVideo, handlePlay } = useOutletContext<OutletContext>();
-  const [activeId, setActiveId] = useState<number | string | null>(null);
 
   return (
     <div className="space-y-12">
@@ -33,8 +32,6 @@ const BrowsePage: React.FC = () => {
           videos={category.videos}
           onPlay={handlePlay}
           onInfo={(v) => setActiveVideo(v)}
-          activeId={activeId}
-          setActiveId={setActiveId}
           onExpand={(v) => setActiveVideo(v)}
         />
       ))}

@@ -31,23 +31,19 @@ body,
   scrollbar-width: none; /* Firefox */
 }
 
-.video-card-wrapper {
-  overflow: visible !important;
-}
+/* REMOVED .video-card-wrapper, .video-carousel-container, .video-card-item, etc. */
 
-
+/* Keep unrelated styles like heroZoom if needed */
 @keyframes heroZoom {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
-
 .animate-heroZoom {
   animation: heroZoom 20s ease-in-out infinite;
+}
+:root {
+  --z-modal: 1300;
+  --z-hover-card: 1200;
+  --z-header: 1000;
 }

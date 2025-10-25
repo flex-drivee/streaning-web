@@ -65,8 +65,6 @@ const MyListPage: React.FC = () => {
             videos={watchHistory}
             onPlay={handlePlay}
             onRemove={(id) => handleRemove("watchHistory", id)}
-            activeId={activeId}
-            setActiveId={setActiveId}
             onExpand={(v) => setActiveVideo(v)}
           />
         </div>
@@ -91,8 +89,6 @@ const MyListPage: React.FC = () => {
             videos={watchLater}
             onPlay={handlePlay}
             onRemove={(id) => handleRemove("watchLater", id)}
-            activeId={activeId}
-            setActiveId={setActiveId}
             onExpand={(v) => setActiveVideo(v)}
           />
         </div>

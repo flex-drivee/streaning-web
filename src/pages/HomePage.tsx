@@ -1,121 +1,79 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useOutletContext } from "react-router-dom";
+import React, { useEffect, useMemo } from "react";
+import { useVideoContext } from "../layout/Layout";
 import Hero from "../components/Hero";
 import VideoCarousel from "../components/VideoCarousel";
-import VideoPlayerModal from "../components/VideoPlayerModal";
-import VideoDetailModal from "../components/VideoDetailModal";
-import { useVideoData } from "../Contexts/VideoDataContext";
-import type { Video } from "../types";
-import { AnimatePresence } from "framer-motion";
 import Spinner from "../components/Spinner";
-
-interface OutletContext {
-  setActiveVideo: (video: Video | null) => void;
-  handlePlay: (video: Video) => void;
-}
+import { useVideoData } from "../Contexts/VideoDataContext";
 
 const HomePage: React.FC = () => {
-  const { setActiveVideo, handlePlay } = useOutletContext<OutletContext>();
+  const { setActiveVideo, handlePlay } = useVideoContext();
   const { categories, loading, error } = useVideoData();
 
-  const [detailVideo, setDetailVideo] = useState<Video | null>(null);
-  const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
-  const [activeId, setActiveId] = useState<number | string | null>(null);
-
-  // Disable body scroll when modals are open
+  // --- Scroll to top after categories load ---
   useEffect(() => {
-    document.body.style.overflow = playingVideo || detailVideo ? "hidden" : "auto";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [playingVideo, detailVideo]);
+    if (!loading) {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [loading]);
 
-  // --- Memoized Callbacks to Prevent Unnecessary Re-renders ---
-  const handlePlayVideo = useCallback((video: Video) => {
-    setPlayingVideo(video);
-  }, []);
+  // --- Featured video (first of first category) ---
+  const featuredVideo = useMemo(
+    () => categories?.[0]?.videos?.[0] || null,
+    [categories]
+  );
 
-  const handleShowDetail = useCallback((video: Video) => {
-    setDetailVideo(video);
-  }, []);
-
-  // --- Loading State ---
-  if (loading)
+  // --- Loading state ---
+  if (loading && categories.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen bg-neutral-900 text-white">
+      <div className="flex items-center justify-center min-h-[70vh] bg-neutral-900 text-white">
         <Spinner />
       </div>
     );
-
-  const featuredVideo = categories[0]?.videos?.[0];
+  }
 
   return (
-    <div className="bg-neutral-900 text-white min-h-screen font-sans relative">
-      {/* ⚠️ Inline Warning Message */}
+    <div className="bg-neutral-900 text-white min-h-screen font-sans relative overflow-x-hidden">
+      {/* ⚠️ Error Banner */}
       {error && (
-        <div className="bg-yellow-600 text-white text-center py-3 text-sm font-medium">
+        <div className="bg-yellow-600 text-white text-center py-3 text-sm font-medium sticky top-0 z-50">
           {error}
         </div>
       )}
 
-      {/* HERO SECTION */}
+      {/* 🎥 HERO SECTION */}
       {featuredVideo && (
         <section className="relative h-screen w-full overflow-hidden">
           <Hero
             video={featuredVideo}
-            onPlay={handlePlayVideo}
-            onInfo={handleShowDetail}
+            onPlay={handlePlay}
+            onInfo={setActiveVideo}
             isBillboard
           />
+
+          {/* smooth dark fade into carousels */}
+          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-neutral-900 to-transparent pointer-events-none" />
         </section>
       )}
 
-      {/* MAIN CONTENT */}
-      <main className="relative z-10 mt-12 md:mt-20 space-y-12">
+      {/* 📺 CAROUSELS */}
+      <main className="relative z-10 mt-20 md:mt-24 space-y-10 md:space-y-14 pb-20">
         {categories.length > 0 ? (
           categories.map((category) => (
             <VideoCarousel
               key={category.id}
               title={category.title || category.name}
               videos={category.videos}
-              onPlay={handlePlayVideo}
-              onInfo={handleShowDetail}
-              activeId={activeId}
-              setActiveId={setActiveId}
-              onExpand={handleShowDetail}
+              onPlay={handlePlay}
+              onInfo={setActiveVideo}
+              onExpand={setActiveVideo}
             />
           ))
-        ) : (
-          <div className="text-center text-gray-400 py-12">
-            No videos available.
+        ) : !loading && !error ? (
+          <div className="text-center text-neutral-400 py-12 px-4">
+            No videos available at the moment.
           </div>
-        )}
+        ) : null}
       </main>
-
-      {/* MODALS */}
-      <AnimatePresence>
-        {detailVideo && (
-          <VideoDetailModal
-            key={detailVideo.id}
-            video={detailVideo}
-            onClose={() => setDetailVideo(null)}
-            onPlay={(v) => {
-              setDetailVideo(null);
-              setPlayingVideo(v);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {playingVideo && (
-          <VideoPlayerModal
-            key={playingVideo.id}
-            video={playingVideo}
-            onClose={() => setPlayingVideo(null)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };

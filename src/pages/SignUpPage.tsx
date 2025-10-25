@@ -17,7 +17,7 @@ const SignUpPage: React.FC = () => {
     setError(null);
 
     try {
-      signup("user"); // default role
+     await signup(email, password); // default role
       navigate("/home");
     } catch {
       setError(t("signup_failed") || "Signup failed. Please try again.");

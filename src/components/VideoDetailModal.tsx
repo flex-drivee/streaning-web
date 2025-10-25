@@ -1,10 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef,useState } from "react";
 import { motion, Variants } from "framer-motion";
 import FocusLock from "react-focus-lock";
 import { Icon } from "./Icon";
 import VideoCarousel from "./VideoCarousel";
 import type { Video } from "../types/index";
-import { modalTransition } from "../utils/motionConfig"; // keep only what you need
 import styles from "./VideoDetailModal.module.css";
 
 interface VideoDetailModalProps {
@@ -24,17 +23,18 @@ const modalFadeScale: Variants = {
       delay: 0.1,
       duration: 0.35,
       ease: [0.25, 0.1, 0.25, 1],
-      type: "spring",
-      damping: 22,
-      stiffness: 220,
     },
   },
   exit: {
     opacity: 0,
-    scale: 0.95,
-    y: 20,
-    transition: { duration: 0.35, ease: "easeInOut", delay: 0 },
+    scale: 0.92,
+    y: 60,
+    transition: {
+      duration: 0.55,
+      ease: [0.4, 0, 0.2, 1],
+    },
   },
+
 };
 
 const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
@@ -43,6 +43,16 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
   onPlay,
 }) => {
   const modalRef = useRef<HTMLDivElement | null>(null);
+
+  const [canClose, setCanClose] = useState(false);
+
+  // Delay backdrop close activation for animation stability
+  useEffect(() => {
+    const t = setTimeout(() => setCanClose(true), 400);
+    return () => clearTimeout(t);
+  }, []);
+
+
 
   /* --- ESC to close --- */
   useEffect(() => {
@@ -56,17 +66,30 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  // Stop trailer playback on unmount
+  useEffect(() => {
+    const vid = modalRef.current?.querySelector("video");
+    return () => {
+      if (vid) {
+        vid.pause();
+      }
+    };
+  }, []);
+  
   return (
     <motion.div
       className={styles.backdrop}
       initial={{ opacity: 0, ["--backdrop-blur" as any]: "0px" }}
-      animate={{ opacity: 1, ["--backdrop-blur" as any]: "12px" }}
+      animate={{ opacity: 1, ["--backdrop-blur" as any]: "var(--blur-amount)" }}
       exit={{
         opacity: 0,
         ["--backdrop-blur" as any]: "0px",
-        transition: { duration: 0.4, delay: 0.2, ease: "easeInOut" },
+        transition: { duration: 0.55, delay: 0.15, ease: [0.4, 0, 0.2, 1] },
       }}
-      onClick={onClose}
+      onClick={() => {
+         if (!canClose) return; 
+          onClose(); 
+        }}
     >
       <FocusLock returnFocus>
         <motion.div
@@ -79,7 +102,6 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
           initial="hidden"
           animate="visible"
           exit="exit"
-          transition={modalTransition}
           tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
         >
@@ -101,15 +123,17 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
                 loop
                 playsInline
                 autoPlay
-                preload="metadata"
+                preload="none"
+                aria-label={`Trailer for ${video.title || "video"}`}
                 className={styles.videoPreview}
               />
             ) : (
               <img
-                src={video.thumbnailUrl}
-                alt={video.title}
+                src={video.thumbnailUrl || "/fallback-thumbnail.jpg"}
+                alt={video.title || "Video preview"}
                 className={styles.videoPreview}
               />
+
             )}
             <div className={styles.videoGradient} />
           </div>
@@ -159,8 +183,6 @@ const VideoDetailModal: React.FC<VideoDetailModalProps> = ({
                   category="Related"
                   videos={video.related}
                   onPlay={onPlay}
-                  activeId={null}
-                  setActiveId={() => {}}
                 />
               </div>
             )}

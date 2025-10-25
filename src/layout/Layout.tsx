@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, useOutletContext } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import Header from "../components/Header";
 import VideoDetailModal from "../components/VideoDetailModal";
 import VideoPlayerModal from "../components/VideoPlayerModal";
 import type { Video } from "../types";
 
-type VideoContextType = {
+// Context shape shared with routed pages
+export type VideoContextType = {
   setActiveVideo: (video: Video | null) => void;
   handlePlay: (video: Video) => void;
-  activeId: string | number | null;
-  setActiveId: (id: string | number | null) => void;
 };
 
-// ✅ Typed context hook for child routes
+// ✅ Typed hook for children (HomePage, etc.)
 export function useVideoContext() {
   return useOutletContext<VideoContextType>();
 }
@@ -20,42 +20,51 @@ export function useVideoContext() {
 const Layout: React.FC = () => {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
   const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
-  const [activeId, setActiveId] = useState<string | number | null>(null);
 
+  // --- Play handler ---
   const handlePlay = (video: Video) => {
+    setActiveVideo(null); // Close detail modal before playing
     setPlayingVideo(video);
   };
 
+  // --- Disable body scroll when modal is open ---
+  useEffect(() => {
+    const hasModal = Boolean(activeVideo || playingVideo);
+    document.body.style.overflow = hasModal ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [activeVideo, playingVideo]);
+
   return (
-    <div className="relative min-h-screen text-white bg-neutral-800/70">
+    <div className="relative min-h-screen text-white bg-neutral-900">
+      {/* 🔹 Global Header */}
       <Header onPlay={handlePlay} />
 
-      {/* ✅ GPU hint for smoother transitions */}
+      {/* 🔹 Routed content */}
       <main className="relative z-0">
-        <Outlet
-          context={{
-            setActiveVideo,
-            handlePlay,
-            activeId,
-            setActiveId,
-          }}
-        />
+        <Outlet context={{ setActiveVideo, handlePlay }} />
       </main>
+      <AnimatePresence>
+        {/* 🔹 Detail Modal */}
+        {activeVideo && (
+          <VideoDetailModal
+            video={activeVideo}
+            key="detail-modal"
+            onClose={() => setActiveVideo(null)}
+            onPlay={handlePlay}
+          />
+        )}
 
-      {activeVideo && (
-        <VideoDetailModal
-          video={activeVideo}
-          onClose={() => setActiveVideo(null)}
-          onPlay={handlePlay}
-        />
-      )}
-
-      {playingVideo && (
-        <VideoPlayerModal
-          video={playingVideo}
-          onClose={() => setPlayingVideo(null)}
-        />
-      )}
+        {/* 🔹 Player Modal */}
+        {playingVideo && (
+          <VideoPlayerModal
+            video={playingVideo}
+            key="player-modal"
+            onClose={() => setPlayingVideo(null)}
+          />
+        )}
+        </AnimatePresence>
     </div>
   );
 };

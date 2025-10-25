@@ -6,6 +6,7 @@ import React, {
   useState,
   useMemo,
   useCallback,
+  ReactNode,
 } from "react";
 import type { Category, Video } from "../types";
 import { videoData as localVideoData } from "../data/videos";
@@ -30,13 +31,13 @@ export interface VideoDataContextType {
   isLiked: (id: string) => boolean;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/categories";
-const DEV = import.meta.env.DEV;
+const API_URL = "http://localhost:4000/categories"; // This will fail gracefully
+const DEV = import.meta.env.MODE === 'development';
 const CACHE_TTL = 10 * 60 * 1000;
 
 const VideoDataContext = createContext<VideoDataContextType | undefined>(undefined);
 
-export const VideoDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const VideoDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export const VideoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const cacheTimeRef = useRef<Record<string, number>>({});
   const indexRef = useRef<Record<string, Video>>({});
   const inflightRef = useRef<Record<string, Promise<Video[]> | undefined>>({});
-  const metaCacheRef = useRef<Record<string, Partial<Video>>>({}); // ✅ stable metadata cache
+  const metaCacheRef = useRef<Record<string, Partial<Video>>>({});
 
   const [watchLater, setWatchLater] = useState<Record<string, Video>>({});
   const [liked, setLiked] = useState<Record<string, Video>>({});
@@ -97,7 +98,7 @@ export const VideoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           cat.videos.forEach((v) => {
             indexRef.current[v.id] = v;
             const { description, ...meta } = v;
-            metaCacheRef.current[v.id] = meta; // ✅ cache metadata
+            metaCacheRef.current[v.id] = meta;
           });
         });
 
@@ -110,7 +111,7 @@ export const VideoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           cat.videos?.forEach((v) => {
             indexRef.current[v.id] = v;
             const { description, ...meta } = v;
-            metaCacheRef.current[v.id] = meta; // ✅ cache metadata
+            metaCacheRef.current[v.id] = meta;
           });
         });
         setCategories(localVideoData);
@@ -147,7 +148,7 @@ export const VideoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         vids.forEach((v) => {
           indexRef.current[v.id] = v;
           const { description, ...meta } = v;
-          metaCacheRef.current[v.id] = meta; // ✅ cache metadata
+          metaCacheRef.current[v.id] = meta;
         });
         return vids;
       } catch {
@@ -158,7 +159,7 @@ export const VideoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         vids.forEach((v) => {
           indexRef.current[v.id] = v;
           const { description, ...meta } = v;
-          metaCacheRef.current[v.id] = meta; // ✅ cache metadata
+          metaCacheRef.current[v.id] = meta;
         });
         return vids;
       } finally {
@@ -181,7 +182,7 @@ export const VideoDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const getVideoMetadata = useCallback(
     (id: string) => metaCacheRef.current[id],
     []
-  ); // ✅ returns stable reference
+  );
 
   // ---------- Mutators ----------
   const toggleWatchLater = useCallback(
